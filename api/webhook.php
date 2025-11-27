@@ -37,21 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sender_id = $messageData['sender']['id'];
         $message_text = $messageData['message']['text'] ?? '';
 
-        // Check if message text exists (ignore stickers/likes for now)
+        // Check if message text exists
         if (!empty($message_text)) {
             
-            // --- STEP 1: GET THE FULL NAME (Safely) ---
+            // --- STEP 1: GET THE FULL NAME ---
             $fullName = getUserFullName($sender_id, $page_access_token);
             
-            // --- STEP 2: PREPARE REPLY ---
-            $reply = "Hi $fullName, I received your message: '$message_text'";
+            // --- STEP 2: EXACT REPLY ---
+            // This will result in: "Hi Bryan Barangan"
+            $reply = "Hi $fullName";
 
             // --- STEP 3: SEND REPLY ---
             sendReply($sender_id, $reply, $page_access_token);
         }
     }
     
-    // Always return 200 OK to Facebook, otherwise they will retry and cause "stuck sending"
     http_response_code(200);
     echo json_encode(["status" => "EVENT_RECEIVED"]);
     exit;
@@ -62,23 +62,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ==========================================
 
 function getUserFullName($senderId, $token) {
-    // Added v18.0 to ensure stability
     $url = "https://graph.facebook.com/v18.0/$senderId?fields=name&access_token=$token";
     
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Don't wait more than 5 seconds
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     $result = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     
-    // If API fails or permission denied (common with non-public apps), default to "Friend"
+    // If API fails, default to "Friend"
     if ($httpCode !== 200 || !$result) {
         return "Friend";
     }
 
     $data = json_decode($result, true);
-    
     return $data['name'] ?? "Friend";
 }
 
@@ -95,7 +93,7 @@ function sendReply($recipientId, $messageText, $token) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Don't wait more than 5 seconds
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     curl_exec($ch);
     curl_close($ch);
 }
