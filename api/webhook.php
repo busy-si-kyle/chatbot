@@ -41,20 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // --- STEP 1: GET THE USER'S NAME ---
             $firstName = getUserName($sender_id, $page_access_token);
             
-            // --- STEP 2: LOGIC WITH NAME ---
-            $msg = strtolower(trim($message_text));
-            $reply = "";
-
-            if ($msg === 'hi' || $msg === 'hello') {
-                // HERE IS THE CHANGE: We use the $firstName variable
-                $reply = "Hi $firstName! 👋 Welcome back.";
-            } 
-            elseif (strpos($msg, 'price') !== false) {
-                $reply = "$firstName, our prices start at $10.";
-            } 
-            else {
-                $reply = "Sorry $firstName, I didn't understand that.";
-            }
+            // --- STEP 2: SIMPLE REPLY (NO LOGIC) ---
+            // No matter what they typed, send this exact reply:
+            $reply = "Hi $firstName! Thanks for your message.";
 
             // Send the reply
             sendReply($sender_id, $reply, $page_access_token);
@@ -70,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // HELPER FUNCTIONS
 // ==========================================
 
-// NEW FUNCTION: Ask Facebook for the user's name
 function getUserName($senderId, $token) {
+    // Try to get the user's First Name from Facebook
     $url = "https://graph.facebook.com/$senderId?fields=first_name&access_token=$token";
     
     $ch = curl_init($url);
