@@ -38,12 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message_text = $messageData['message']['text'] ?? '';
 
         if (!empty($message_text)) {
-            // --- STEP 1: GET THE USER'S NAME ---
-            $firstName = getUserName($sender_id, $page_access_token);
+            // --- STEP 1: GET THE FULL NAME ---
+            $fullName = getUserFullName($sender_id, $page_access_token);
             
-            // --- STEP 2: SIMPLE REPLY (NO LOGIC) ---
-            // No matter what they typed, send this exact reply:
-            $reply = "Hi $firstName! Thanks for your message.";
+            // --- STEP 2: EXACT REPLY ---
+            $reply = "Hi $fullName";
 
             // Send the reply
             sendReply($sender_id, $reply, $page_access_token);
@@ -59,9 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // HELPER FUNCTIONS
 // ==========================================
 
-function getUserName($senderId, $token) {
-    // Try to get the user's First Name from Facebook
-    $url = "https://graph.facebook.com/$senderId?fields=first_name&access_token=$token";
+function getUserFullName($senderId, $token) {
+    // We changed 'first_name' to 'name' to get the full name
+    $url = "https://graph.facebook.com/$senderId?fields=name&access_token=$token";
     
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -71,7 +70,7 @@ function getUserName($senderId, $token) {
     $data = json_decode($result, true);
     
     // Return the name if found, otherwise default to "Friend"
-    return $data['first_name'] ?? "Friend";
+    return $data['name'] ?? "Friend";
 }
 
 function sendReply($recipientId, $messageText, $token) {
