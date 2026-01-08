@@ -72,12 +72,17 @@ function getUserFullName($senderId, $token) {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     
-    // If API fails, default to "Friend"
-    if ($httpCode !== 200 || !$result) {
+    $data = json_decode($result, true);
+
+    // LOGGING: This helps identify if the failure is due to missing 'Advanced Access'
+    if (isset($data['error'])) {
+        error_log("Messenger Profile API Error (ID $senderId): " . json_encode($data['error']));
+    }
+    
+    // If API fails or returns error, default to "Friend"
+    if ($httpCode !== 200 || !$result || isset($data['error'])) {
         return "Friend";
     }
-
-    $data = json_decode($result, true);
     
     // Construct name from first_name and last_name if available
     if (!empty($data['first_name'])) {
