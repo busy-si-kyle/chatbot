@@ -62,7 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ==========================================
 
 function getUserFullName($senderId, $token) {
-    $url = "https://graph.facebook.com/v18.0/$senderId?fields=name&access_token=$token";
+    // Request first_name and last_name individually for better reliability with PSIDs
+    $url = "https://graph.facebook.com/v21.0/$senderId?fields=first_name,last_name,name&access_token=$token";
     
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -77,6 +78,17 @@ function getUserFullName($senderId, $token) {
     }
 
     $data = json_decode($result, true);
+    
+    // Construct name from first_name and last_name if available
+    if (!empty($data['first_name'])) {
+        $name = $data['first_name'];
+        if (!empty($data['last_name'])) {
+            $name .= " " . $data['last_name'];
+        }
+        return $name;
+    }
+
+    // Fallback to the 'name' field, then default to "Friend"
     return $data['name'] ?? "Friend";
 }
 
