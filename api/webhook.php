@@ -40,14 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check if message text exists
         if (!empty($message_text)) {
             
-            // --- STEP 1: GET THE FULL NAME ---
-            $fullName = getUserFullName($sender_id, $page_access_token);
-            
-            // --- STEP 2: EXACT REPLY ---
-            // This will result in: "Hi Bryan Barangan"
-            $reply = "Hi $fullName";
+            // --- HARDCODED REPLY ---
+            $reply = "Hi Bryan Barangan!";
 
-            // --- STEP 3: SEND REPLY ---
+            // --- SEND REPLY ---
             sendReply($sender_id, $reply, $page_access_token);
         }
     }
@@ -60,42 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ==========================================
 // HELPER FUNCTIONS
 // ==========================================
-
-function getUserFullName($senderId, $token) {
-    // Request first_name and last_name individually for better reliability with PSIDs
-    $url = "https://graph.facebook.com/v21.0/$senderId?fields=first_name,last_name,name&access_token=$token";
-    
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    $result = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    $data = json_decode($result, true);
-
-    // LOGGING: This helps identify if the failure is due to missing 'Advanced Access'
-    if (isset($data['error'])) {
-        error_log("Messenger Profile API Error (ID $senderId): " . json_encode($data['error']));
-    }
-    
-    // If API fails or returns error, default to "Friend"
-    if ($httpCode !== 200 || !$result || isset($data['error'])) {
-        return "Friend";
-    }
-    
-    // Construct name from first_name and last_name if available
-    if (!empty($data['first_name'])) {
-        $name = $data['first_name'];
-        if (!empty($data['last_name'])) {
-            $name .= " " . $data['last_name'];
-        }
-        return $name;
-    }
-
-    // Fallback to the 'name' field, then default to "Friend"
-    return $data['name'] ?? "Friend";
-}
 
 function sendReply($recipientId, $messageText, $token) {
     $url = "https://graph.facebook.com/v18.0/me/messages?access_token=" . $token;
